@@ -8,27 +8,55 @@ from matplotlib import pyplot as plt
 
 MIN_MATCH_COUNT = 10
 FLANN_INDEX_KDTREE = 1
+MAX_PERCENTAGE_FILTER_MASK = 50
 
 def create_mask(queryImage, trainImage):
     hueValues = []
 
-    queryImage = cv2.cvtColor(queryImage, cv2.COLOR_BGR2HLS)
+    queryImageHLS = cv2.cvtColor(queryImage, cv2.COLOR_BGR2HLS)
 
     # Get the color palette of the sprite
-    for row in queryImage:
+    for row in queryImageHLS:
         for element in row:
-            h, l, s = element
+            h, l, s = element # TODO: CHECK IF ITS THE THIRDTH POSITION IS THE HUE ??
             
             if h not in hueValues:
                 hueValues.append(h)
+
+    trainImageHLS = cv2.cvtColor(trainImage, cv2.COLOR_BGR2HLS)
+
+    delta = numpy.floor((360 * MAX_PERCENTAGE_FILTER_MASK)/(100 * len(hueValues) * 2))
+
+    hueValuesIncremented = []
+
+    for value in hueValues:
+        for d in range(int(-delta), int(delta)):
+            hueValuesIncremented.append(int(value + d))
+
+    #TODO: to the loop with hls values (360 to 0)
+    hueValuesIncremented = [*set(hueValuesIncremented)]
+
+    heigth = trainImageHLS.shape[0]
+    width = trainImageHLS.shape[1]
+
+    for y in range(0, heigth):
+        for x in range(0, width):
+            h, l, s = trainImageHLS[y, x]
+            if h in hueValuesIncremented:
+                trainImageHLS[y, x][0] = 1
+            else:
+                trainImageHLS[y, x][0] = 0
+
+    
             
-    trainImageCopy = trainImage.copy()
+    # output = trainImage.copy()[:,:,0]
 
-    aux = trainImage[:,:,0]
+    # aux = cv2.cvtColor(trainImage, cv2.COLOR_BGR2HLS)
 
-    trainImageCopy = 1 if hueValues in aux else 0
+    # output = 1 if hueValues in aux[:,:,0] else 0
 
-    cv2.imshow('queryImageCopy', trainImageCopy)
+    # cv2.imshow('queryImageCopy', output)
+    # cv2.imwrite('dale.png', output)
 
     # print(colors)
     # print(len(colors))
@@ -36,6 +64,8 @@ def create_mask(queryImage, trainImage):
 
 def main():
     startTime = time.time()
+
+    print(cv2.__version__)
 
     # Create object for queryImage
     queryImage = QueryImage(cv2.imread('default_mob_skins/minecraft_zombie_head.png', cv2.IMREAD_COLOR))

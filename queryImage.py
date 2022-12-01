@@ -1,4 +1,5 @@
 import cv2
+import numpy
 
 SCALE_MULTIPLIER = 30
 
@@ -7,7 +8,7 @@ class QueryImage:
     __imageResized = None
 
     def __init__(self, image):
-        self.__original = image
+        self.__original = image.astype(numpy.float32) / 255
         self.__imageResized = cv2.resize(image, (image.shape[0] * 30, image.shape[1] * 30), interpolation= cv2.INTER_NEAREST)
 
     def getOriginalImage(self):
