@@ -3,7 +3,6 @@ import numpy
 import time
 
 from queryImage import QueryImage
-from PIL import ImageGrab # for realtime screenshots
 from matplotlib import pyplot as plt
 
 MIN_MATCH_COUNT = 10
@@ -23,9 +22,14 @@ def create_mask(queryImage, trainImage):
             if h not in hueValues:
                 hueValues.append(h)
 
+    print(hueValues)
+    trainImage = cv2.medianBlur(trainImage, 7)
+
+    # trainImage = trainImage.astype(numpy.float32) / 255
+
     trainImageHLS = cv2.cvtColor(trainImage, cv2.COLOR_BGR2HLS)
 
-    delta = numpy.floor((360 * MAX_PERCENTAGE_FILTER_MASK)/(100 * len(hueValues) * 2))
+    delta = 20 #numpy.floor((360 * MAX_PERCENTAGE_FILTER_MASK)/(100 * len(hueValues) * 2))
 
     hueValuesIncremented = []
 
@@ -34,44 +38,41 @@ def create_mask(queryImage, trainImage):
             hueValuesIncremented.append(int(value + d))
 
     #TODO: to the loop with hls values (360 to 0)
-    hueValuesIncremented = [*set(hueValuesIncremented)]
+    hueValuesIncremented = set(hueValuesIncremented)
+
+    print(hueValuesIncremented)
 
     heigth = trainImageHLS.shape[0]
     width = trainImageHLS.shape[1]
+
+    mask = trainImage.copy()
 
     for y in range(0, heigth):
         for x in range(0, width):
             h, l, s = trainImageHLS[y, x]
             if h in hueValuesIncremented:
-                trainImageHLS[y, x][0] = 1
+                mask[y, x][0] = 1
+                mask[y, x][1] = 1
+                mask[y, x][2] = 1
             else:
-                trainImageHLS[y, x][0] = 0
+                mask[y, x][0] = 0
+                mask[y, x][1] = 0
+                mask[y, x][2] = 0
 
-    
-            
-    # output = trainImage.copy()[:,:,0]
+    cv2.imwrite('mask.png', mask * 255)
+    cv2.imwrite('trainImage.png', trainImage)
+    cv2.waitKey()
 
-    # aux = cv2.cvtColor(trainImage, cv2.COLOR_BGR2HLS)
-
-    # output = 1 if hueValues in aux[:,:,0] else 0
-
-    # cv2.imshow('queryImageCopy', output)
-    # cv2.imwrite('dale.png', output)
-
-    # print(colors)
-    # print(len(colors))
-    pass
 
 def main():
     startTime = time.time()
-
-    print(cv2.__version__)
 
     # Create object for queryImage
     queryImage = QueryImage(cv2.imread('default_mob_skins/minecraft_zombie_head.png', cv2.IMREAD_COLOR))
 
     # Open the ingame image
     trainImage = cv2.imread('zombie_ingame.jpg', cv2.IMREAD_COLOR)
+    # trainImage = trainImage.astype(numpy.float32) / 255
 
     # Initiate SIFT detector
     sift = cv2.SIFT_create(contrastThreshold= 0.02, edgeThreshold= 17)
