@@ -7,61 +7,45 @@ from matplotlib import pyplot as plt
 
 MIN_MATCH_COUNT = 10
 FLANN_INDEX_KDTREE = 1
-MAX_PERCENTAGE_FILTER_MASK = 50
+MAX_DISTANCE = 150
 
 def create_mask(queryImage, trainImage):
-    hueValues = []
 
-    queryImageHLS = cv2.cvtColor(queryImage, cv2.COLOR_BGR2HLS)
+    mediaB = 0
+    mediaG = 0
+    mediaR = 0
 
-    # Get the color palette of the sprite
-    for row in queryImageHLS:
+    for row in queryImage:
         for element in row:
-            h, l, s = element # TODO: CHECK IF ITS THE THIRDTH POSITION IS THE HUE ??
+           b, g, r = element
+
+           mediaB += b
+           mediaG += g
+           mediaR += r
+
+    mediaB = mediaB/queryImage.size
+    mediaG = mediaG/queryImage.size
+    mediaR = mediaR/queryImage.size
             
-            if h not in hueValues:
-                hueValues.append(h)
-
-    print(hueValues)
-    trainImage = cv2.medianBlur(trainImage, 7)
-
-    # trainImage = trainImage.astype(numpy.float32) / 255
-
-    trainImageHLS = cv2.cvtColor(trainImage, cv2.COLOR_BGR2HLS)
-
-    delta = 20 #numpy.floor((360 * MAX_PERCENTAGE_FILTER_MASK)/(100 * len(hueValues) * 2))
-
-    hueValuesIncremented = []
-
-    for value in hueValues:
-        for d in range(int(-delta), int(delta)):
-            hueValuesIncremented.append(int(value + d))
-
-    #TODO: to the loop with hls values (360 to 0)
-    hueValuesIncremented = set(hueValuesIncremented)
-
-    print(hueValuesIncremented)
-
-    heigth = trainImageHLS.shape[0]
-    width = trainImageHLS.shape[1]
+    heigth = trainImage.shape[0]
+    width = trainImage.shape[1]
 
     mask = trainImage.copy()
 
     for y in range(0, heigth):
         for x in range(0, width):
-            h, l, s = trainImageHLS[y, x]
-            if h in hueValuesIncremented:
-                mask[y, x][0] = 1
-                mask[y, x][1] = 1
-                mask[y, x][2] = 1
+            b, g, r = trainImage[y, x]
+            dist = numpy.sqrt((mediaB - b)**2 + (mediaG - g)**2 + (mediaR - r)**2)
+            
+            if dist < MAX_DISTANCE:
+                mask[y, x] = [1, 1, 1]
             else:
-                mask[y, x][0] = 0
-                mask[y, x][1] = 0
-                mask[y, x][2] = 0
-
+                mask[y, x] = [0, 0, 0]
+        
     cv2.imwrite('mask.png', mask * 255)
     cv2.imwrite('trainImage.png', trainImage)
-    cv2.waitKey()
+
+    return mask[:,:,0]
 
 
 def main():
@@ -81,8 +65,8 @@ def main():
     mask = create_mask(queryImage.getOriginalImage(), trainImage)
 
     # Find the keypoints and descriptors with SIFT
-    kp1, des1 = sift.detectAndCompute(queryImage.getImage(),None)
-    kp2, des2 = sift.detectAndCompute(trainImage,None)
+    kp1, des1 = sift.detectAndCompute(queryImage.getImage(), mask)
+    kp2, des2 = sift.detectAndCompute(trainImage, mask)
 
     index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
     search_params = dict(checks = 50)
