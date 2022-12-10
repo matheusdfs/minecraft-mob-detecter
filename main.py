@@ -53,7 +53,6 @@ def main():
 
     # Open the ingame image
     trainImage = cv2.imread('scenarios/zombie_ingame.jpg', cv2.IMREAD_COLOR)
-    # trainImage = trainImage.astype(numpy.float32) / 255
 
     # Initiate SIFT detector
     sift = cv2.SIFT_create(contrastThreshold= 0.02, edgeThreshold= 17)
