@@ -41,10 +41,7 @@ def create_mask(queryImage, trainImage):
                 mask[y, x] = [1, 1, 1]
             else:
                 mask[y, x] = [0, 0, 0]
-        
-    cv2.imwrite('mask.png', mask * 255)
-    cv2.imwrite('trainImage.png', trainImage)
-
+    
     return mask[:,:,0]
 
 
@@ -55,7 +52,7 @@ def main():
     queryImage = QueryImage(cv2.imread('default_mob_skins/minecraft_zombie_head.png', cv2.IMREAD_COLOR))
 
     # Open the ingame image
-    trainImage = cv2.imread('zombie_ingame.jpg', cv2.IMREAD_COLOR)
+    trainImage = cv2.imread('scenarios/zombie_ingame.jpg', cv2.IMREAD_COLOR)
     # trainImage = trainImage.astype(numpy.float32) / 255
 
     # Initiate SIFT detector
@@ -67,6 +64,14 @@ def main():
     # Find the keypoints and descriptors with SIFT
     kp1, des1 = sift.detectAndCompute(queryImage.getImage(), mask)
     kp2, des2 = sift.detectAndCompute(trainImage, mask)
+
+    img = queryImage.getImage().copy()
+
+    img = cv2.drawKeypoints(queryImage.getImage() ,
+                    kp1 ,
+                    img ,
+                    flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.imshow('img', img)
 
     index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
     search_params = dict(checks = 50)

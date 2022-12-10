@@ -9,7 +9,9 @@ class QueryImage:
 
     def __init__(self, image):
         self.__original = image.astype(numpy.float32) / 255
-        self.__imageResized = cv2.resize(image, (image.shape[0] * 30, image.shape[1] * 30), interpolation= cv2.INTER_NEAREST)
+        imageResized = cv2.resize(image, (image.shape[0] * 30, image.shape[1] * 30), interpolation= cv2.INTER_NEAREST)
+
+        numpy.zeros([100,100,3], dtype = numpy.uint8)
 
     def getOriginalImage(self):
         return self.__original
