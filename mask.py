@@ -2,7 +2,7 @@ from cv2 import Mat
 import cv2
 import numpy as np
 
-MASK_RGB_MAX_DIST = 30 / 255
+MASK_RGB_MAX_DIST = 40 / 255
 
 
 def get_distances_to_color(img, clr):
@@ -14,7 +14,7 @@ def get_distances_to_color(img, clr):
 
 
 def create_mask(query_img, train_img) -> Mat:
-    train_img = train_img.astype(np.float32) / 255
+    train_img = train_img.copy().astype(np.float32) / 255
 
     query_colors = set()
     for row in query_img:

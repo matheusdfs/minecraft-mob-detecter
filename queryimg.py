@@ -1,6 +1,3 @@
-import os
-import sys
-from typing import List
 import cv2
 from cv2 import Mat
 import numpy as np
@@ -52,18 +49,3 @@ class QueryImgWrapper:
 
     def get_name(self) -> str:
         return self.__name
-
-
-def load_query_imgs(directory, scale) -> List[QueryImgWrapper]:
-    query_imgs = []
-    for filename in os.listdir(directory):
-        filepath = directory + filename
-        img = cv2.imread(filepath, cv2.IMREAD_COLOR)
-
-        if img is None:
-            print(f'Error opening image: {filepath}\n')
-            sys.exit()
-
-        name = filename.split('.')[0]
-        query_imgs.append(QueryImgWrapper(img, scale, name))
-    return query_imgs
